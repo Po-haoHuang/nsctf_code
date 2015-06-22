@@ -1,0 +1,20 @@
+This script to download and setup the real service ssp
+I will remove /home/ssp/binary
+Ready(y/n) ?y
+Recv 10.8.11.100, prepare to setup ssp service using ssh
+Installing......
+/home/ssp/utility.c: In function ‘changemoney’:
+/home/ssp/utility.c:153:5: warning: format not a string literal and no format arguments [-Wformat-security]
+     printf(buffer);
+     ^
+/home/ssp/utility.c: In function ‘changeback’:
+/home/ssp/utility.c:203:9: warning: format ‘%s’ expects argument of type ‘char *’, but argument 2 has type ‘char (*)[128]’ [-Wformat=]
+         scanf("%s", &filepath); //get client's input 
+         ^
+/home/ssp/utility.c: In function ‘leavemsg’:
+/home/ssp/utility.c:354:5: warning: format not a string literal and no format arguments [-Wformat-security]
+     printf(msg);
+     ^
+Begining compiling... 
+End of compiling... 
+Bye bye..
