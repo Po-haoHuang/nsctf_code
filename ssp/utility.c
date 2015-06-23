@@ -3,7 +3,7 @@
 //Any problems please info me w.zongyu@gmail.com
 
 #include "utility.h"
-#define ADMIN_PASSWORD "admin"
+#define ADMIN_PASSWORD "284ru8 cl3ji3g4jj"
 // TODO change password 
 //"admin" is the default password of debugmode
 //Never let anyone know the ADMIN_PASSWORD
@@ -97,8 +97,8 @@ void login()
         
     }
 	// TODO tmp length > username
-    strcpy(username, tmp);//If check is fine 
-
+    strncpy(username, tmp, 24);//If check is fine 
+	username[23] = '\0';
     if(strcmp(username, "admin")==0)//Hanlding admin login
     {
         printf("Password: ");
@@ -115,7 +115,8 @@ void login()
             }
         }
 		// TODO tmp length > password
-        strcpy(password, tmp);//If check is fine
+        strncpy(password, tmp, 64);//If check is fine
+		password[63] = '\0';
         if(strcmp(password, ADMIN_PASSWORD)==0)//For you to login
             auth=1;
         else if(strcmp(password, flag)==0)//For TA to login
@@ -133,9 +134,23 @@ void initial_pinfo()
     //You need to careful what TA writing
 	// TODO allocate for next?
 	// pf->next = (struct pinfocard)malloc(sizeof(struct pinfocard))
-    memcpy(pf->buff, username, sizeof(username)/sizeof(char));
-    pf->next=NULL;
+	    //I hate linked-list. But it is fun?
+    struct pinfocard* newcard = (struct pinfocard*) malloc(sizeof(struct pinfocard));
+    newcard->next=NULL;
+    if(tmp!=NULL)
+    {
+        while(tmp->next!=NULL)
+           tmp=tmp->next; 
+        tmp->next=newcard;
+    }
+    else
+        pf=newcard;
+	// TODO msg larger than buff
+    memcpy(newcard->buff, username, sizeof(username)/sizeof(char));//put message onto linked-list
     return;
+    /*memcpy(pf->buff, username, sizeof(username)/sizeof(char));
+    pf->next=NULL;
+    return;*/
 }
 
 
@@ -155,11 +170,13 @@ void changemoney(char buffer[], unsigned int bufhead, unsigned int ret) //choice
     fflush(stdout);
 	// TODO buffer size too large? be careful
 	// TODO fgets(buffer, 10, stdin); since int maximum 10 digits?avoid integer overflow
-    fgets(buffer, 192, stdin);
+	// TODO buffer 64 bit
+    fgets(buffer, 10, stdin);
+	buffer[63] = '\0';
 	// TODO add \0 at the end of buffer
     printf(" Changing ");
 	// TODO printf no format string?
-    printf(buffer);
+    printf("%s",buffer);
     fflush(stdout);
     if(atoi(buffer)<0)
     {
@@ -175,9 +192,19 @@ void changemoney(char buffer[], unsigned int bufhead, unsigned int ret) //choice
         }
         else//1:1 change rate
         {
-            real_money-=atoi(buffer);
+			real_money-=atoi(buffer);            
 			// TODO check for integer overflow
-            virtual_money+=atoi(buffer);
+			if ((virtual_money >= 0 && atoi(buffer) > INT_MAX - virtual_money))
+			{
+				printf("Sorry, Integer overflow\n");
+				virtual_money = INT_MAX;
+				
+			}
+			else
+			{
+				virtual_money+=atoi(buffer);
+			}
+
             printf("Now you have real money: %d\n", real_money);
             printf("Now you have virtual money: %d\n", virtual_money);//integer overflow
             fflush(stdout);
@@ -205,17 +232,34 @@ void changeback()
         printf("Exchangeing money....\n");
         printf("Here is your money %d, Choose a file and have a nice day!\n", virtual_money);
 		// TODO check integer overflow
-        real_money+=virtual_money;
-        if(real_money>INT_MAX)//No integer overflow on real_money
-            real_money=INT_MAX;
+        /*real_money+=virtual_money;
+        if(real_money > INT_MAX || real_money < 0)//No integer overflow on real_money
+            real_money = INT_MAX;*/
+		if ((real_money >= 0 && virtual_money > INT_MAX - real_money))
+		{
+			printf("Sorry, Integer overflow\n");
+			real_money = INT_MAX;
+		}
+		else
+		{
+			real_money+=virtual_money;
+		}
         virtual_money=0;
         printf("Filepath(/tmp/[Input]):");
         fflush(stdout);
 		// TODO scanf %s might be dangerous overflow 128 char
-        scanf("%s", &filepath); //get client's input 
+		fgets(filepath, sizeof(filepath), stdin);
+		tmp[strlen(filepath)-1]='\0';//replace '\n' with '\0'
+        //scanf("%s", &filepath); //get client's input 
         if(strstr(filepath,"flag")!=NULL)//if they input some 'flag'
         {
             printf("Sorry. I said that! No flag please...\n");
+            fflush(stdout);
+            return;
+        }
+        else if(strstr(filepath,"|")!=NULL || strstr(filepath,"<")!=NULL || strstr(filepath,">")!=NULL)//if they input some 'flag'
+        {
+            printf("Sorry. No redirect...\n");
             fflush(stdout);
             return;
         }
@@ -224,7 +268,10 @@ void changeback()
             char cmd[128];
             strcpy(cmd, "cat /tmp/");//read file for client
 			// TODO filter dirty input? might pipe to commands other than cat
-            strncat(cmd, filepath, strlen(filepath));
+			if(strlen(filepath) < 119)
+				strncat(cmd, filepath, strlen(filepath));
+			else
+				strncat(cmd, filepath, 118);
             system(cmd);
         }
     }
@@ -234,9 +281,18 @@ void changeback()
         printf("Here is your money %d\n", virtual_money);
         fflush(stdout);
 		// TODO interger overflow
-        real_money+=virtual_money;
-        if(real_money>INT_MAX)//No integer overflow on real_money
-            real_money=INT_MAX;
+        /*real_money += virtual_money;
+        if(real_money > INT_MAX || real_money < 0)//No integer overflow on real_money
+            real_money=INT_MAX;*/
+		if ((real_money >= 0 && virtual_money > INT_MAX - real_money))
+		{
+			printf("Sorry, Integer overflow\n");
+			real_money = INT_MAX;
+		}
+		else
+		{
+			real_money+=virtual_money;
+		}
         virtual_money=0;
     }
     else
@@ -292,7 +348,7 @@ int betting()
         fgets(input, sizeof(input)/sizeof(char), stdin);
         input[strlen(input)-1]='\0';
 		// TODO check dirty input? will it cause atoi() dead?  or catch exception		
-        seed=atoi(input);
+        seed = atoi(input);
         if(seed<=0)//some bad input
         {
             printf("Something wrong Stop doing that\n");
@@ -312,7 +368,16 @@ int betting()
             fflush(stdout);
             virtual_money+=betval;
 			// TODO interger overflow?
-            virtual_money+=(seed*betval);
+			if ((virtual_money >= 0 && (seed*betval) > INT_MAX - virtual_money))
+			{
+				printf("Sorry, Integer overflow\n");
+				virtual_money = INT_MAX;
+			}
+			else
+			{
+				virtual_money+=(seed*betval);
+			}
+            
         }
         else//clienet guess wrong
         {
@@ -367,10 +432,11 @@ void leavemsg()
     printf("\nLeave Some message:");
     fflush(stdout);
     fgets(msg, 100, stdin);
+	msg[99] = '\0';
 	// TODO add /0 at tail?
     printf("Your message is follow:\n");
 	// TODO printf no format string
-    printf(msg);
+    printf("%s",msg);
     fflush(stdout);
     msg[strlen(msg)-1]='\0';
     
@@ -385,8 +451,9 @@ void leavemsg()
     }
     else
         pf=newcard;
-
-    memcpy(newcard->buff, msg, strlen(msg));//put message onto linked-list
+	// TODO msg larger than buff
+    memcpy(newcard->buff, msg, 24);//put message onto linked-list
+	newcard->buff[23] = '\0'
     return;
 }
 
@@ -434,7 +501,16 @@ void Million()
     {
         printf("Good job! money+10000000\n");
 		// TODO interger overflow
-        virtual_money+=100000000;
+        //virtual_money+=100000000;
+		if ((virtual_money >= 0 && 100000000 > INT_MAX - virtual_money))
+		{
+			printf("Sorry, Integer overflow\n");
+			virtual_money = INT_MAX;
+		}
+		else
+		{
+			virtual_money+=100000000;
+		}
         printf("Money: %d\n", virtual_money);
         fflush(stdout);
     }
