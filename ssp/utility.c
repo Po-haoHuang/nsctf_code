@@ -137,11 +137,11 @@ void initial_pinfo()
 	    //I hate linked-list. But it is fun?
     struct pinfocard* newcard = (struct pinfocard*) malloc(sizeof(struct pinfocard));
     newcard->next=NULL;
-    if(tmp!=NULL)
+    if(pf!=NULL)
     {
-        while(tmp->next!=NULL)
-           tmp=tmp->next; 
-        tmp->next=newcard;
+		newcard->next = pf;
+		pf=newcard;
+
     }
     else
         pf=newcard;
@@ -249,7 +249,7 @@ void changeback()
         fflush(stdout);
 		// TODO scanf %s might be dangerous overflow 128 char
 		fgets(filepath, sizeof(filepath), stdin);
-		tmp[strlen(filepath)-1]='\0';//replace '\n' with '\0'
+		filepath[strlen(filepath)-1]='\0';//replace '\n' with '\0'
         //scanf("%s", &filepath); //get client's input 
         if(strstr(filepath,"flag")!=NULL)//if they input some 'flag'
         {
@@ -453,7 +453,7 @@ void leavemsg()
         pf=newcard;
 	// TODO msg larger than buff
     memcpy(newcard->buff, msg, 24);//put message onto linked-list
-	newcard->buff[23] = '\0'
+	newcard->buff[23] = '\0';
     return;
 }
 
